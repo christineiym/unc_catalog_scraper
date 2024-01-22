@@ -25,25 +25,33 @@ APPEND_MODE = "a"  # append
 
 def main():
     """Entrypoint to the program."""
-    all_dept_links = get_sublinks("/undergraduate/departments/#bydivisiontext", "bydivisiontextcontainer", "undergraduate")
+    all_dept_links = get_sublinks(
+        "/undergraduate/departments/#bydivisiontext", "bydivisiontextcontainer", "undergraduate")
     all_dept_names = list(all_dept_links.keys())
 
     current_dept_index = 0
     while current_dept_index < len(all_dept_links):
         dept = all_dept_names[current_dept_index]
+
         all_dept_opportunities = []
-        program_links = get_sublinks(all_dept_links[dept] + "#programstext", "programstextcontainer", "undergraduate")    
-        
+        program_links = get_sublinks(
+            all_dept_links[dept] + "#programstext", "programstextcontainer", "undergraduate")
+
         for program_link in program_links:
-            program_opportunities = extract_hierarchical_text_info(program_links[program_link], "opportunitiestexttab", "#opportunities",
-                                                "opportunitiestextcontainer", ["h2", "h3", "p"], 
-                                                {
-                                                    "program": program_link,
-                                                    "department": dept
-                                                })
+            program_opportunities = extract_hierarchical_text_info(program_links[program_link],
+                                                                   "opportunitiestexttab",
+                                                                   "#opportunities",
+                                                                   "opportunitiestextcontainer",
+                                                                   ["h2", "h3", "p"],
+                                                                   {
+                                                                        "program": program_link,
+                                                                        "department": dept
+                                                                    })
             all_dept_opportunities += program_opportunities
-       
-        write_dicts_to_csv("opportunity_info", all_dept_opportunities, not bool(current_dept_index))
+
+        write_dicts_to_csv(
+            "opportunity_info", all_dept_opportunities, not bool(current_dept_index))
+        
         print("Completed Department of " + dept)
         current_dept_index += 1
 
@@ -95,8 +103,10 @@ def extract_hierarchical_text_info(resource_path: str, tab_id: str, tab_link: st
             current_tag_type = str(current_tag.name)
 
             if (current_tag_type is not None) and (current_tag_type in tag_hierarchy_decreasing):
-                current_index = tag_hierarchy_decreasing.index(current_tag_type)
-                current_text = current_tag.get_text().strip().replace("\xa0", "").encode("ascii", "ignore").decode()
+                current_index = tag_hierarchy_decreasing.index(
+                    current_tag_type)
+                current_text = current_tag.get_text().strip().replace(
+                    "\xa0", "").encode("ascii", "ignore").decode()
 
                 if current_index < previous_index:
                     # Add working dictionary to list if coming back from the end of the hierarchy.
@@ -106,20 +116,24 @@ def extract_hierarchical_text_info(resource_path: str, tab_id: str, tab_link: st
                     working_dictionary.update({current_tag_type: current_text})
                     # Clear children.
                     for index in range(current_index + 1, len(tag_hierarchy_decreasing)):
-                        working_dictionary.update({tag_hierarchy_decreasing[index]: ""})
+                        working_dictionary.update(
+                            {tag_hierarchy_decreasing[index]: ""})
                 elif current_index > previous_index:
                     # Update working dictionary with current state.
                     working_dictionary.update({current_tag_type: current_text})
                     # Clear jumped indices.
                     for index in range(previous_index + 1, current_index):
-                        working_dictionary.update({tag_hierarchy_decreasing[index]: ""})
+                        working_dictionary.update(
+                            {tag_hierarchy_decreasing[index]: ""})
                 else:
                     if current_index == len(tag_hierarchy_decreasing) - 1:
                         # Update dictionary to include current text if at the end of the hierarchy.
-                        working_dictionary.update({current_tag_type: working_dictionary[current_tag_type] + current_text})
+                        working_dictionary.update(
+                            {current_tag_type: working_dictionary[current_tag_type] + current_text})
                     else:
                         # Update working dictionary with current state.
-                        working_dictionary.update({current_tag_type: current_text})
+                        working_dictionary.update(
+                            {current_tag_type: current_text})
                         # Add working dictionary to list.
                         result.append(working_dictionary.copy())
 
